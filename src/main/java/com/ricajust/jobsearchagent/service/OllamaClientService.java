@@ -13,13 +13,16 @@ public class OllamaClientService {
 
     private final RestClient restClient;
     private final String model;
+    private final AgentInstructionsService agentInstructionsService;
 
     public OllamaClientService(
             @Value("${ollama.base-url}") String baseUrl,
-            @Value("${ollama.model}") String model
+            @Value("${ollama.model}") String model,
+            AgentInstructionsService agentInstructionsService
     ) {
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
         this.model = model;
+        this.agentInstructionsService = agentInstructionsService;
     }
 
     public String chat(String prompt) {
@@ -28,7 +31,10 @@ public class OllamaClientService {
                 "model", model,
                 "stream", false,
                 "think", false,
-                "messages", List.of(Map.of("role", "user", "content", prompt))
+                "messages", List.of(
+                        Map.of("role", "system", "content", agentInstructionsService.getInstructions()),
+                        Map.of("role", "user", "content", prompt)
+                )
         );
 
         JsonNode response = restClient.post()
