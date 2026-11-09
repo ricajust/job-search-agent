@@ -1,6 +1,7 @@
 package com.ricajust.jobsearchagent;
 
 import com.ricajust.jobsearchagent.service.JobSearchService;
+import com.ricajust.jobsearchagent.service.UserProfileService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,19 +16,14 @@ public class JobSearchAgentApplication {
     }
 
     @Bean
-    CommandLineRunner testJobSearch(JobSearchService jobSearchService) {
+    CommandLineRunner testUserProfile(
+            UserProfileService userProfileService) {
+
         return args -> {
-            var jobs = jobSearchService.searchJobs("angular");
-
-            System.out.println("Vagas encontradas: " + jobs.size());
-
-            jobs.forEach(job -> {
-                System.out.println("-----------------------");
-                System.out.println("Titulo: " + job.title());
-                System.out.println("Empresa: " + job.company());
-                System.out.println("Localização: " + job.location());
-                System.out.println("URL: " + job.url());
-            });
+            System.out.println(
+                    userProfileService.getUserProfile()
+            );
         };
     }
+
 }

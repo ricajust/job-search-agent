@@ -51,7 +51,7 @@ public class JobSearchService {
                 .map(jobMapper::toJobOpportunity)
                 .toList();
 
-        return jobFilterService.filterByKeyword(opportunities, keyword);
+        return jobFilterService.rankByKeyword(opportunities, keyword);
 
     }
 }

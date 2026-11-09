@@ -1,3 +1,4 @@
+
 package com.ricajust.jobsearchagent.service;
 
 import com.ricajust.jobsearchagent.model.JobOpportunity;
@@ -7,61 +8,131 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class JobFilterServiceTest {
+class JobFilterServiceTest {
 
-    private final JobFilterService jobFilterService = new JobFilterService();
+    private final JobFilterService jobFilterService =
+            new JobFilterService();
 
     @Test
-    void shouldReturnJobsContainingKeyword() {
-        //Arrange
-        JobOpportunity job1 = new JobOpportunity(
-                "1", "Senior Angular Developer",
-                "Company A", "Brazil", null, null,
+    void shouldPrioritizeTitleMatchWhenScoresAreEqual() {
+        // Arrange
+        JobOpportunity backendDeveloper = new JobOpportunity(
+                "1", "Senior Back-end Developer",
+                "Company A", "Brazil",
+                null, "Experience with Angular",
                 "https://example.com/1", "Remotive"
         );
 
-        JobOpportunity job2 = new JobOpportunity(
-                "2", "Java Developer",
-                "Company B", "Brazil", null, null,
+        JobOpportunity angularDeveloper = new JobOpportunity(
+                "2", "Senior Angular Developer",
+                "Company B", "Brazil",
+                null, "Experience with Java",
                 "https://example.com/2", "Remotive"
         );
 
-        //Act
-        List<JobOpportunity> result = jobFilterService.filterByKeyword(List.of(job1, job2), "Angular");
+        // Act
+        List<JobOpportunity> result =
+                jobFilterService.rankByKeyword(
+                        List.of(backendDeveloper, angularDeveloper),
+                        "Angular"
+                );
 
-        //Assert
-        assertEquals(1, result.size());
-        assertEquals("Senior Angular Developer", result.get(0).title());
+        // Assert
+        assertEquals(2, result.size());
+
+        assertEquals(
+                "Senior Angular Developer",
+                result.get(0).title()
+        );
+
+        assertEquals(
+                "Senior Back-end Developer",
+                result.get(1).title()
+        );
     }
 
     @Test
-    void shouldIgnoreUppercaseAndLowercase() {
-        //Arrange
-        JobOpportunity job = new JobOpportunity(
-                "1", "SENIOR ANGULAR DEVELOPER",
-                "Company A", "Brazil", null, null,
+    void shouldRankJobsWithKeywordInTitleAndDescriptionFirst() {
+        // Arrange
+        JobOpportunity angularDeveloper = new JobOpportunity(
+                "1", "Senior Angular Developer",
+                "Company A", "Brazil",
+                null, "Experience with Angular",
                 "https://example.com/1", "Remotive"
         );
 
-        //Act
-        List<JobOpportunity> result = jobFilterService.filterByKeyword(List.of(job), "angular");
+        JobOpportunity backendDeveloper = new JobOpportunity(
+                "2", "Senior Back-end Developer",
+                "Company B", "Brazil",
+                null, "Experience with Angular",
+                "https://example.com/2", "Remotive"
+        );
 
-        //Assert
-        assertEquals(1, result.size());
+        // Act
+        List<JobOpportunity> result =
+                jobFilterService.rankByKeyword(
+                        List.of(backendDeveloper, angularDeveloper),
+                        "Angular"
+                );
+
+        // Assert
+        assertEquals(2, result.size());
+        assertEquals("Senior Angular Developer",
+                result.get(0).title());
     }
 
     @Test
-    void shouldReturnEmpityListWhenNoJobsMatch() {
-        //Arrange
-        List<JobOpportunity> result = jobFilterService.filterByKeyword(List.of(), "angular");
+    void shouldRankJobsWithKeywordOnlyInDescription() {
+        // Arrange
+        JobOpportunity job = new JobOpportunity(
+                "1", "Senior Back-end Developer",
+                "Company A", "Brazil",
+                null, "Experience with Angular",
+                "https://example.com/1", "Remotive"
+        );
 
-        //Assert
+        // Act
+        List<JobOpportunity> result =
+                jobFilterService.rankByKeyword(
+                        List.of(job), "Angular"
+                );
+
+        // Assert
+        assertEquals(1, result.size());
+        assertEquals("Senior Back-end Developer",
+                result.get(0).title());
+    }
+
+    @Test
+    void shouldRemoveJobsWithoutKeyword() {
+        // Arrange
+        JobOpportunity job = new JobOpportunity(
+                "1", "Java Developer",
+                "Company A", "Brazil",
+                null, "Experience with Spring Boot",
+                "https://example.com/1", "Remotive"
+        );
+
+        // Act
+        List<JobOpportunity> result =
+                jobFilterService.rankByKeyword(
+                        List.of(job), "Angular"
+                );
+
+        // Assert
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void shouldThrowExceptionWhenJobsIsNull() {
-        //Assert
-        assertThrows(NullPointerException.class, () -> jobFilterService.filterByKeyword(null, "angular"));
+    void shouldReturnEmptyListWhenNoJobsAreProvided() {
+        // Arrange
+        List<JobOpportunity> jobs = List.of();
+
+        // Act
+        List<JobOpportunity> result =
+                jobFilterService.rankByKeyword(jobs, "Angular");
+
+        // Assert
+        assertTrue(result.isEmpty());
     }
 }
